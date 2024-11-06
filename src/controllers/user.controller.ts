@@ -24,27 +24,26 @@ export const registerUser = async (req: Request, res: Response) => {
   }
 };
 
-// Função para login de usuário e geração de token JWT
 export const loginUser = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
 
-    // Busca o usuário pelo nome de usuário
-    const user = await User.findOne({ where: { username } });
+    const user = await User.findOne({ where:{ username: username }  });
+    
     if (!user) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
-
-    // Compara a senha criptografada
+    
+    
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    // Gera o token JWT
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({ message: 'Login bem-sucedido', token });
+    res.json({ message: 'Login bem-sucedido', token, username: user.username });
   } catch (error) {
     res.status(500).json({ error: 'Erro ao fazer login' });
   }

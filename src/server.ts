@@ -1,9 +1,10 @@
-import { createApp, connectDatabase } from './app';
+import { createApp, connectDatabase, initializeUser } from './app';
 
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   await connectDatabase();
+  await initializeUser();
 
   const app = createApp();
   app.listen(PORT, () => {

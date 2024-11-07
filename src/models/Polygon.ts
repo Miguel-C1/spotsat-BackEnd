@@ -16,6 +16,12 @@ export class Polygon extends Model {
     allowNull: true,
   })
   name!: string;
+
+  @Column({
+    type: DataType.JSON,
+    allowNull: true,
+  })
+  properties!: object;
 }
 
 export default Polygon;

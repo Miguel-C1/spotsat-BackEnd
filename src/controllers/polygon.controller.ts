@@ -4,11 +4,31 @@ import { Sequelize, Op, where } from 'sequelize'; // Adjust the path as necessar
 
 export const createPolygon = async (req: Request, res: Response) => {
   try {
-    const { geometry, name } = req.body;
-    const polygon = await Polygon.create({ geometry, name });
+    const { features } = req.body;
+    if (!features || features.length === 0) {
+      return res.status(400).json({ error: 'Nenhum polígono fornecido' });
+    }
+    if(!features[0].properties.name){
+      return res.status(400).json({ error: 'Nome do polígono não fornecido' });
+    }
+    if(!features[0].geometry){
+      return res.status(400).json({ error: 'Geometria do polígono não fornecida' });
+    }
+    if(!features[0].properties){
+      return res.status(400).json({ error: 'Propriedades do polígono não fornecidas' });
+    }
+    const name = features[0].properties.name;
+    const geometry = features[0].geometry;
+    const properties = features[0].properties;
+    const polygon = await Polygon.create({ geometry: geometry, name: name, properties: properties});
     res.status(201).json(polygon);
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar polígono' });
+    if (error instanceof Error) {
+      console.log(error.message);
+    } else {
+      console.log('Unknown error:', error);
+    }
+    res.status(500).json({ error: 'Erro ao criar polígono:' });
   }
 };
 
@@ -59,8 +79,11 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const polygon = await Polygon.findByPk(req.params.id);
     if (!polygon) return res.status(404).json({ error: 'Polígono não encontrado' });
 
-    const { geometry, name } = req.body;
-    await polygon.update({ geometry, name });
+    const { features } = req.body;
+    const name = features[0].properties.name;
+    const geometry = features[0].geometry;
+    const properties = features[0].properties;
+    await polygon.update({ geometry: geometry, name: name, properties: properties });
     res.json(polygon);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar polígono' });

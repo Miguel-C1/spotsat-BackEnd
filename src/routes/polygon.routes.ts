@@ -6,7 +6,7 @@ import { authMiddleware } from '../middleware/authMiddleware';
 const router = Router();
 
 router.post('/', 
-    authMiddleware,
+    //authMiddleware,
     createPolygon);
 router.get('/', 
     authMiddleware, 

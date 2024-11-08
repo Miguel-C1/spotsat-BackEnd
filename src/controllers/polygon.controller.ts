@@ -1,34 +1,56 @@
 import { Request, Response } from 'express';
 import Polygon from '../models/Polygon';
-import { Sequelize, Op, where } from 'sequelize'; // Adjust the path as necessary
+import * as turf from '@turf/turf';
+import { Sequelize, Op, where } from 'sequelize';
 
 export const createPolygon = async (req: Request, res: Response) => {
   try {
     const { features } = req.body;
+
     if (!features || features.length === 0) {
       return res.status(400).json({ error: 'Nenhum polígono fornecido' });
     }
-    if(!features[0].properties.name){
+    const feature = features[0];
+
+    if (!feature.properties || !feature.properties.name) {
       return res.status(400).json({ error: 'Nome do polígono não fornecido' });
     }
-    if(!features[0].geometry){
+    if (!feature.geometry) {
       return res.status(400).json({ error: 'Geometria do polígono não fornecida' });
     }
-    if(!features[0].properties){
-      return res.status(400).json({ error: 'Propriedades do polígono não fornecidas' });
-    }
-    const name = features[0].properties.name;
-    const geometry = features[0].geometry;
-    const properties = features[0].properties;
-    const polygon = await Polygon.create({ geometry: geometry, name: name, properties: properties});
+
+    const name = feature.properties.name;
+    const properties = feature.properties;
+
+      console.log("feature.geometry: ", feature.geometry)
+    
+
+
+    const geometryLiteral = Sequelize.literal(`
+      ST_Transform(
+        ST_SetSRID(
+          ST_GeomFromGeoJSON('${JSON.stringify(feature.geometry)}'), 
+          4326
+        ), 
+        5880
+      )
+    `);
+    
+    const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
+    const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
+    
+    const polygon = await Polygon.create({
+      geometry: geometryLiteral,
+      name: name,
+      properties: properties,
+      centroid: centroid,
+      area_hectares: area_hectares,
+    });
+
     res.status(201).json(polygon);
   } catch (error) {
-    if (error instanceof Error) {
-      console.log(error.message);
-    } else {
-      console.log('Unknown error:', error);
-    }
-    res.status(500).json({ error: 'Erro ao criar polígono:' });
+    console.error(error instanceof Error ? error.message : 'Unknown error');
+    res.status(500).json({ error: 'Erro ao criar polígono' });
   }
 };
 
@@ -43,10 +65,14 @@ export const getPolygons = async (req: Request, res: Response) => {
 
 export const getPolygonById = async (req: Request, res: Response) => {
   try {
-    const polygon = await Polygon.findByPk(req.params.id);
+    const id = req.params.id;
+    console.log(id)
+    const polygon = await Polygon.findByPk(id);
+
     if (!polygon) return res.status(404).json({ error: 'Polígono não encontrado' });
     res.json(polygon);
   } catch (error) {
+    console.log
     res.status(500).json({ error: 'Erro ao buscar polígono' });
   }
 };
@@ -83,7 +109,29 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const name = features[0].properties.name;
     const geometry = features[0].geometry;
     const properties = features[0].properties;
-    await polygon.update({ geometry: geometry, name: name, properties: properties });
+
+    const geometryLiteral = Sequelize.literal(`
+      ST_Transform(
+        ST_SetSRID(
+          ST_GeomFromGeoJSON('${JSON.stringify(geometry)}'), 
+          4326
+        ), 
+        5880
+      )
+    `);
+    
+    const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
+    const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
+
+    // Atualizando o polígono
+    await polygon.update({
+      geometry: geometryLiteral,
+      name: name,
+      properties: properties,
+      centroid: centroid,
+      area_hectares: area_hectares,
+    });
+
     res.json(polygon);
   } catch (error) {
     res.status(500).json({ error: 'Erro ao atualizar polígono' });

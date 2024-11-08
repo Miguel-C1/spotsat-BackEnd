@@ -6,7 +6,7 @@ import { Table, Column, Model, DataType } from 'sequelize-typescript';
 })
 export class Polygon extends Model {
   @Column({
-    type: DataType.GEOMETRY('POLYGON', 4326),
+    type: DataType.GEOMETRY('POLYGON', 5880),
     allowNull: false,
   })
   geometry!: object;
@@ -22,6 +22,18 @@ export class Polygon extends Model {
     allowNull: true,
   })
   properties!: object;
+
+  @Column({
+    type: DataType.GEOMETRY('POINT', 5880),
+    allowNull: false,
+  })
+  centroid!: object;
+
+  @Column({
+    type: DataType.FLOAT,
+    allowNull: false,
+  })
+  area_hectares!: number;
 }
 
 export default Polygon;

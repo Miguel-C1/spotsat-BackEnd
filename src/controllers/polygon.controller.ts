@@ -21,11 +21,7 @@ export const createPolygon = async (req: Request, res: Response) => {
 
     const name = feature.properties.name;
     const properties = feature.properties;
-
-      console.log("feature.geometry: ", feature.geometry)
     
-
-
     const geometryLiteral = Sequelize.literal(`
       ST_Transform(
         ST_SetSRID(
@@ -66,13 +62,14 @@ export const getPolygons = async (req: Request, res: Response) => {
 export const getPolygonById = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
-    console.log(id)
     const polygon = await Polygon.findByPk(id);
 
+
     if (!polygon) return res.status(404).json({ error: 'Polígono não encontrado' });
+   
+
     res.json(polygon);
   } catch (error) {
-    console.log
     res.status(500).json({ error: 'Erro ao buscar polígono' });
   }
 };
@@ -109,6 +106,7 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const name = features[0].properties.name;
     const geometry = features[0].geometry;
     const properties = features[0].properties;
+    console.log(features)
 
     const geometryLiteral = Sequelize.literal(`
       ST_Transform(
@@ -119,6 +117,8 @@ export const updatePolygon = async (req: Request, res: Response) => {
         5880
       )
     `);
+
+    console.log("Coordenadas: ", features[0].geometry.coordinates)
     
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
     const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);

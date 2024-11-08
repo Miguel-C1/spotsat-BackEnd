@@ -5,6 +5,10 @@ import { authMiddleware } from '../middleware/authMiddleware';
 
 const router = Router();
 
+router.get('/search', 
+    //authMiddleware, 
+    searchPolygons); 
+
 router.post('/', 
     authMiddleware,
     createPolygon);
@@ -12,7 +16,7 @@ router.get('/',
     authMiddleware, 
     getPolygons);
 router.get('/:id', 
-    //authMiddleware, 
+    authMiddleware, 
     getPolygonById);
 router.put('/:id', 
     authMiddleware, 
@@ -21,10 +25,8 @@ router.delete('/:id',
     authMiddleware,
     deletePolygon);
 router.get('/:id/interests', 
-    //authMiddleware, 
+    authMiddleware, 
     getPolygonInterests);
-router.get('/search', 
-    //authMiddleware, 
-    searchPolygons); 
+
 
 export default router;

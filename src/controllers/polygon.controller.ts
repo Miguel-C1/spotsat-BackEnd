@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import Polygon from '../models/Polygon';
-import * as turf from '@turf/turf';
 import { Sequelize, Op, where } from 'sequelize';
 
 export const createPolygon = async (req: Request, res: Response) => {
@@ -84,7 +83,7 @@ export const getPolygonInterests = async (req: Request, res: Response) => {
     }
 
     const interests = await Polygon.findAll({
-      attributes: ['id', 'geometry', 'name'],
+      attributes: ['id', 'geometry', 'name', 'properties'],
       where: {
         id: { [Op.ne]: id },
         [Op.and]: Sequelize.literal(`ST_Contains(ST_GeomFromGeoJSON('${JSON.stringify(polygon.geometry)}'), geometry)`),
@@ -106,7 +105,6 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const name = features[0].properties.name;
     const geometry = features[0].geometry;
     const properties = features[0].properties;
-    console.log(features)
 
     const geometryLiteral = Sequelize.literal(`
       ST_Transform(
@@ -117,8 +115,6 @@ export const updatePolygon = async (req: Request, res: Response) => {
         5880
       )
     `);
-
-    console.log("Coordenadas: ", features[0].geometry.coordinates)
     
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
     const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
@@ -151,34 +147,38 @@ export const deletePolygon = async (req: Request, res: Response) => {
 };
 
 export const searchPolygons = async (req: Request, res: Response) => {
-    try {
-      const { latitude, longitude, radius } = req.query;
-  
-      if (!latitude || !longitude || !radius) {
-        return res.status(400).json({ error: 'Parâmetros latitude, longitude e raio são necessários' });
-      }
-  
-      const lat = parseFloat(latitude as string);
-      const lon = parseFloat(longitude as string);
-      const rad = parseFloat(radius as string);
-  
-      if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
-        return res.status(400).json({ error: 'Parâmetros devem ser numéricos' });
-      }
-  
-      const polygons = await Polygon.findAll({
-        attributes: ['id', 'geometry', 'name'],
-        where: Sequelize.literal(`
-          ST_DWithin(
-            geometry,
-            ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
-            ${rad}
-          )
-        `),
-      });
-  
-      res.json(polygons);
-    } catch (error) {
-      res.status(500).json({ error: 'Erro ao buscar polígonos' });
+
+  try {
+    const { latitude, longitude, radius } = req.query;
+
+    if (!latitude || !longitude || !radius) {
+      return res.status(400).json({ error: 'Parâmetros latitude, longitude e raio são necessários' });
     }
-  };
+
+    const lat = parseFloat(latitude as string);
+    const lon = parseFloat(longitude as string);
+    const rad = parseFloat(radius as string);
+
+
+
+    if (isNaN(lat) || isNaN(lon) || isNaN(rad)) {
+      return res.status(400).json({ error: 'Parâmetros devem ser numéricos' });
+    }
+    const polygons = await Polygon.findAll({
+      attributes: ['id', 'geometry', 'name', 'properties'],
+      where: Sequelize.literal(`
+        ST_DWithin(
+          ST_Transform(geometry, 4326),
+          ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography,
+          ${rad}
+        )
+      `),
+    });
+    
+
+    res.json(polygons);
+  } catch (error) {
+    console.error(error); 
+    res.status(500).json({ error: 'Erro ao buscar polígonos' });
+  }
+};

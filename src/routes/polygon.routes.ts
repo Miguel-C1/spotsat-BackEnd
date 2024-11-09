@@ -6,7 +6,7 @@ import { authMiddleware } from '../middleware/authMiddleware';
 const router = Router();
 
 router.get('/search', 
-    //authMiddleware, 
+    authMiddleware, 
     searchPolygons); 
 
 router.post('/', 

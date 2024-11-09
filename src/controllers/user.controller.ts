@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User';
 
@@ -15,11 +15,12 @@ export const registerUser = async (req: Request, res: Response) => {
     }
 
     // Criptografa a senha antes de salvar
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcryptjs.hash(password, 10);
     const newUser = await User.create({ username, password: hashedPassword });
 
     res.status(201).json({ message: 'Usuário registrado com sucesso', userId: newUser.id });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Erro ao registrar usuário' });
   }
 };
@@ -33,7 +34,7 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Credenciais inválidas' });
     }
@@ -46,6 +47,7 @@ export const loginUser = async (req: Request, res: Response) => {
     res.cookie('jwt', refreshToken, { httpOnly: true, secure: true, sameSite: 'strict' });
     res.json({ message: 'Login bem-sucedido', token, username: user.username });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: 'Erro ao fazer login' });
   }
 };
@@ -62,6 +64,7 @@ export const refreshToken = (req: Request, res: Response) => {
     const accessToken = jwt.sign({ userId: decoded.userId }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ accessToken });
   } catch (error) {
+    console.log(error);
     return res.status(403).json({ message: 'Token de renovação inválido' });
   }
 };

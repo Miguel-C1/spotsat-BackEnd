@@ -1,4 +1,5 @@
-import { Table, Column, Model, DataType } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import User from './User';
 
 @Table({
   tableName: 'polygons',
@@ -34,6 +35,16 @@ export class Polygon extends Model {
     allowNull: false,
   })
   area_hectares!: number;
+
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  userId!: number;
+
+  @BelongsTo(() => User)
+  user!: User;
 }
 
 export default Polygon;

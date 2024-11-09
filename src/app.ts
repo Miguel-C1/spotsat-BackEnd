@@ -1,5 +1,5 @@
 import express, { Application } from 'express';
-import bcrypt from 'bcrypt';
+import bcryptjs from 'bcryptjs';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import sequelize from './config/database';
@@ -32,7 +32,7 @@ const initializeUser = async () => {
 
     if (!existingUser) {
       // Criptografa a senha antes de salvar
-      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+      const hashedPassword = await bcryptjs.hash(defaultPassword, 10);
       await User.create({ username: defaultUsername, password: hashedPassword });
       console.log(`Usuário padrão '${defaultUsername}' criado com sucesso.`);
     } else {

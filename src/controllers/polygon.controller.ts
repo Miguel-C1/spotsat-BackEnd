@@ -9,6 +9,7 @@ export const createPolygon = async (req: Request, res: Response) => {
     if (!features || features.length === 0) {
       return res.status(400).json({ error: 'Nenhum polígono fornecido' });
     }
+
     const feature = features[0];
 
     if (!feature.properties || !feature.properties.name) {
@@ -20,7 +21,7 @@ export const createPolygon = async (req: Request, res: Response) => {
 
     const name = feature.properties.name;
     const properties = feature.properties;
-    
+
     const geometryLiteral = Sequelize.literal(`
       ST_Transform(
         ST_SetSRID(
@@ -30,16 +31,17 @@ export const createPolygon = async (req: Request, res: Response) => {
         5880
       )
     `);
-    
+
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
     const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
-    
+
     const polygon = await Polygon.create({
       geometry: geometryLiteral,
       name: name,
       properties: properties,
       centroid: centroid,
       area_hectares: area_hectares,
+      userId: req.userId,
     });
 
     res.status(201).json(polygon);
@@ -99,7 +101,10 @@ export const getPolygonInterests = async (req: Request, res: Response) => {
 export const updatePolygon = async (req: Request, res: Response) => {
   try {
     const polygon = await Polygon.findByPk(req.params.id);
-    if (!polygon) return res.status(404).json({ error: 'Polígono não encontrado' });
+
+    if (!polygon) {
+      return res.status(404).json({ error: 'Polígono não encontrado' });
+    }
 
     const { features } = req.body;
     const name = features[0].properties.name;
@@ -115,21 +120,22 @@ export const updatePolygon = async (req: Request, res: Response) => {
         5880
       )
     `);
-    
+
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
     const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
 
-    // Atualizando o polígono
     await polygon.update({
       geometry: geometryLiteral,
       name: name,
       properties: properties,
       centroid: centroid,
       area_hectares: area_hectares,
+      userId: req.userId, 
     });
 
     res.json(polygon);
   } catch (error) {
+    console.error(error instanceof Error ? error.message : 'Unknown error');
     res.status(500).json({ error: 'Erro ao atualizar polígono' });
   }
 };

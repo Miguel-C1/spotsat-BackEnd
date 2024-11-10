@@ -33,10 +33,11 @@ export const createPolygon = async (req: Request, res: Response) => {
     `);
 
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
-    const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
-
+    const area_hectares = feature.geometry.type === "Polygon" ? 
+    Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`) : 
+    null; 
     const polygon = await Polygon.create({
-      geometry: geometryLiteral,
+      geometry: centroid ,
       name: name,
       properties: properties,
       centroid: centroid,
@@ -103,7 +104,7 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const polygon = await Polygon.findByPk(req.params.id);
 
     if (!polygon) {
-      return res.status(404).json({ error: 'Polígono não encontrado' });
+      return res.status(404).json({ error: "Polígono não encontrado" });
     }
 
     const { features } = req.body;
@@ -112,17 +113,17 @@ export const updatePolygon = async (req: Request, res: Response) => {
     const properties = features[0].properties;
 
     const geometryLiteral = Sequelize.literal(`
-      ST_Transform(
-        ST_SetSRID(
-          ST_GeomFromGeoJSON('${JSON.stringify(geometry)}'), 
-          4326
-        ), 
+      ST_SetSRID(
+        ST_GeomFromGeoJSON('${JSON.stringify(geometry)}'), 
         5880
       )
     `);
+  
 
     const centroid = Sequelize.literal(`ST_AsGeoJSON(ST_Centroid(${geometryLiteral.val}))`);
-    const area_hectares = Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`);
+    const area_hectares = geometry.type === "Polygon" ? 
+      Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`) : 
+      null;
 
     await polygon.update({
       geometry: geometryLiteral,
@@ -130,13 +131,13 @@ export const updatePolygon = async (req: Request, res: Response) => {
       properties: properties,
       centroid: centroid,
       area_hectares: area_hectares,
-      userId: req.userId, 
+      userId: req.userId,
     });
 
     res.json(polygon);
   } catch (error) {
-    console.error(error instanceof Error ? error.message : 'Unknown error');
-    res.status(500).json({ error: 'Erro ao atualizar polígono' });
+    console.error(error instanceof Error ? error.message : "Unknown error");
+    res.status(500).json({ error: "Erro ao atualizar polígono" });
   }
 };
 

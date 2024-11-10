@@ -1,13 +1,10 @@
 import { Table, Column, Model, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import User from './User';
 
-@Table({
-  tableName: 'polygons',
-  timestamps: true,
-})
+@Table({tableName: 'polygons',timestamps: true,})
 export class Polygon extends Model {
   @Column({
-    type: DataType.GEOMETRY('POLYGON', 5880),
+    type: DataType.GEOMETRY('GEOMETRY', 5880),
     allowNull: false,
   })
   geometry!: object;
@@ -32,7 +29,7 @@ export class Polygon extends Model {
 
   @Column({
     type: DataType.FLOAT,
-    allowNull: false,
+    allowNull: true,
   })
   area_hectares!: number;
 

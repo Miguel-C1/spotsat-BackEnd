@@ -12,7 +12,7 @@ const createApp = (): Application => {
   const app = express();
 
   app.use(cors({
-    origin: 'http://localhost:3001',
+    origin: 'http://frontend-spotsat-processoseletivo-1:3001',
     credentials: true, 
   }));
 

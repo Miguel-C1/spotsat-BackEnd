@@ -3,13 +3,23 @@ import { createApp, connectDatabase, initializeUser } from './app';
 const PORT = process.env.PORT || 8080;
 
 const startServer = async () => {
-  await connectDatabase();
-  await initializeUser();
+  try {
+    await connectDatabase();
+    await initializeUser();
 
-  const app = createApp();
-  app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-  });
+    // Cria e inicia o servidor
+    const app = createApp();
+    app.listen(PORT, () => {
+      console.log(`Servidor rodando na porta ${PORT}`);
+    });
+
+    return app;
+  } catch (error) {
+    console.error('Erro ao iniciar o servidor:', error);
+    process.exit(1);
+  }
 };
 
-startServer();
+const app = startServer();
+
+export default app;

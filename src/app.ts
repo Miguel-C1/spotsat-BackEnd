@@ -33,10 +33,8 @@ const initializeUser = async () => {
       // Criptografa a senha antes de salvar
       const hashedPassword = await bcryptjs.hash(defaultPassword, 10);
       await User.create({ username: defaultUsername, password: hashedPassword });
-      console.log(`Usuário padrão '${defaultUsername}' criado com sucesso.`);
-    } else {
-      console.log(`Usuário padrão '${defaultUsername}' já existe.`);
-    }
+
+    } 
   } catch (error) {
     console.error('Erro ao inicializar usuário padrão:', error);
   }
@@ -46,7 +44,6 @@ const initializeUser = async () => {
 const connectDatabase = async () => {
   try {
     await sequelize.sync();
-    console.log('Conectado ao banco de dados e sincronizado');
   } catch (error) {
     console.error('Erro ao conectar ao banco de dados:', error);
     process.exit(1);

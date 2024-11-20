@@ -12,7 +12,7 @@ const createApp = (): Application => {
   const app = express();
 
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
     credentials: true, 
   }));
 
@@ -30,7 +30,6 @@ const initializeUser = async () => {
     const existingUser = await User.findOne({ where: { username: defaultUsername } });
 
     if (!existingUser) {
-      // Criptografa a senha antes de salvar
       const hashedPassword = await bcryptjs.hash(defaultPassword, 10);
       await User.create({ username: defaultUsername, password: hashedPassword });
 

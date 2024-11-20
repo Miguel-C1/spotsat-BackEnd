@@ -37,7 +37,7 @@ export const createPolygon = async (req: Request, res: Response) => {
     Sequelize.literal(`ST_Area(${geometryLiteral.val}) / 10000`) : 
     null; 
     const polygon = await Polygon.create({
-      geometry: centroid ,
+      geometry: geometryLiteral ,
       name: name,
       properties: properties,
       centroid: centroid,
